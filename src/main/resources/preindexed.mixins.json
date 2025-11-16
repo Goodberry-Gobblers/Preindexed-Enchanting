@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "io.github.goodberry_gobblers.preindexed.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "target": "@env(DEFAULT)",
+  "refmap": "preindexed.refmap.json",
+  "mixins": [
+    "ItemMixin",
+    "ItemStackMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
