@@ -1,18 +1,19 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
 import io.github.goodberry_gobblers.preindexed.EnchantingSlots;
+import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
 import io.github.goodberry_gobblers.preindexed.Preindexed;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
@@ -30,12 +31,30 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Mixin(Item.class)
-public abstract class ItemMixin implements EnchantingSlots {
+public abstract class ItemMixin implements EnchantingSlotsHelper {
     @Override
-    public int preindexed$getEnchantingSlots(ItemStack itemStack) {
+    public EnchantingSlots preindexed$getUsedEnchantingSlots(ItemStack itemStack) {
         Map<Enchantment, Integer> enchants = EnchantmentHelper.getEnchantments(itemStack);
 
-        return enchants.values().stream().reduce(0, Integer::sum);
+        EnchantingSlots total = new EnchantingSlots((short)0, (short)0);
+
+        for (var entry : enchants.entrySet()) total.add((short) entry.getValue().intValue(), entry.getKey().isCurse());
+        return total;
+    }
+
+    @Override
+    public Optional<Short> preindexed$getMaxEnchantingSlots(ItemStack itemStack, Level level) {
+        Optional<Registry<Map<String, Short>>> slotsRegistry;
+        if (level.isClientSide) {
+            slotsRegistry = Objects.requireNonNull(Minecraft.getInstance().getConnection()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
+        } else {
+            slotsRegistry = Objects.requireNonNull(level.getServer()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
+        }
+
+        if (slotsRegistry.isPresent()) {
+            return Optional.ofNullable(slotsRegistry.get().get(Preindexed.SLOTS_KEY).get(ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString()));
+        }
+        return Optional.empty();
     }
 }
 
@@ -50,31 +69,33 @@ class ItemStackMixin {
 
     @Inject(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", shift = At.Shift.AFTER, ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
     public void getTooltipLines(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<List<Component>> cir, List<Component> list) {
-        Optional<Registry<Map<String, Short>>> slotsRegistry = Objects.requireNonNull(Minecraft.getInstance().getConnection()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
-        if (slotsRegistry.isPresent()) {
-            ResourceLocation location = ForgeRegistries.ITEMS.getKey(this.getItem());
-            if (location != null) {
-                Short maxSlots = Objects.requireNonNull(slotsRegistry.get().get(Preindexed.SLOTS_KEY)).get(location.toString());
-                if (maxSlots != null) {
-                    Integer usedSlots = EnchantingSlots.getUsedSlots((ItemStack) (Object) this);
+        Optional<Short> maxSlotsOptional = EnchantingSlotsHelper.getMaxSlots((ItemStack) (Object) this, Minecraft.getInstance().level);
+        if (maxSlotsOptional.isPresent() && maxSlotsOptional.get() != null) {
+            short maxSlots = maxSlotsOptional.get();
+            EnchantingSlots usedSlots = EnchantingSlotsHelper.getUsedSlots((ItemStack) (Object) this);
 
-                    if (maxSlots < 0) {
-                        list.add(Component.translatable(
-                                "item.preindexed.enchant_limit_tooltip",
-                                Math.abs(maxSlots)
-                        ).withStyle(ChatFormatting.DARK_PURPLE));
-                    } else if (maxSlots == 0) {
-                        list.add(Component.translatable(
-                                "item.preindexed.unenchantable_tooltip"
-                        ).withStyle(ChatFormatting.DARK_RED));
-                    } else {
-                        list.add(Component.translatable(
-                                "item.preindexed.enchant_slots_tooltip",
-                                usedSlots,
-                                maxSlots == Short.MAX_VALUE ? "\u221e" : maxSlots
-                        ).withStyle(ChatFormatting.BLUE));
-                    }
+            if (maxSlots < 0) {
+                list.add(Component.translatable(
+                        "item.preindexed.enchant_limit_tooltip",
+                        Math.abs(maxSlots)
+                ).withStyle(ChatFormatting.DARK_PURPLE));
+            } else if (maxSlots == 0) {
+                list.add(Component.translatable(
+                        "item.preindexed.unenchantable_tooltip"
+                ).withStyle(ChatFormatting.DARK_RED));
+            } else {
+                Component tooltip = Component.translatable(
+                        "item.preindexed.enchant_slots_tooltip",
+                        usedSlots.getBaseSlots(),
+                        maxSlots == Short.MAX_VALUE ? "\u221e" : maxSlots
+                ).withStyle(usedSlots.getBaseSlots() <= maxSlots + usedSlots.getCursedSlots()? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
+                if (usedSlots.hasCursedSlots()) {
+                    tooltip = tooltip.copy().append(Component.translatable(
+                            "item.preindexed.cursed_slots_tooltip",
+                            2 * usedSlots.getCursedSlots()
+                    ).withStyle(ChatFormatting.RED));
                 }
+                list.add(tooltip);//.append(Component.translatable("item.preindexed.cursed_slots_tooltip", 2).withStyle(ChatFormatting.RED)));
             }
         }
     }

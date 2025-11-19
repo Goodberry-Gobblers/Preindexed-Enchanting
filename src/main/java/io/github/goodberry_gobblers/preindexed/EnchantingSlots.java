@@ -1,26 +1,39 @@
 package io.github.goodberry_gobblers.preindexed;
 
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+public class EnchantingSlots {
+    private short baseSlots;
+    private short cursedSlots;
 
-public interface EnchantingSlots {
-    static int getUsedSlots(ItemStack itemStack) {
-        if (itemStack != null) {
-            return ((EnchantingSlots) itemStack.getItem()).preindexed$getEnchantingSlots(itemStack);
-        } else {
-            return 0;
-        }
+    public EnchantingSlots(short base, short cursed) {
+        this.baseSlots = base;
+        this.cursedSlots = cursed;
     }
 
-    static int getMaxSlots(Item item) {
-        if (item != null) {
-            return ((EnchantingSlots) item).preindexed$getMaxEnchantingSlots(item);
-        } else {
-            return 0;
-        }
+    public short getBaseSlots() {
+        return this.baseSlots;
     }
 
-    int preindexed$getEnchantingSlots(ItemStack itemStack);
+    public void setBaseSlots(short i) {
+        this.baseSlots = i;
+    }
 
-    int preindexed$getMaxEnchantingSlots(Item item);
+    public short getCursedSlots() {
+        return this.cursedSlots;
+    }
+
+    public boolean hasCursedSlots() {
+        return this.cursedSlots != 0;
+    }
+
+    public void setCursedSlots(short i) {
+        this.cursedSlots = i;
+    }
+
+    public void add(short i, boolean isCursed) {
+        if (isCursed) {
+            this.cursedSlots += i;
+        } else {
+            this.baseSlots += i;
+        }
+    }
 }
