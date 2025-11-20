@@ -2,6 +2,7 @@ package io.github.goodberry_gobblers.preindexed;
 
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
+import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.data.DataProvider;
@@ -16,6 +17,7 @@ import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -33,13 +35,15 @@ public class Preindexed {
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    // Datapack datagen constants
     public static final ResourceKey<Registry<Map<String, Short>>> SLOTS_REGISTRY_KEY = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(MOD_ID, "maxslots"));
     public static final ResourceKey<Map<String, Short>> SLOTS_KEY = ResourceKey.create(SLOTS_REGISTRY_KEY, ResourceLocation.fromNamespaceAndPath(MOD_ID, "maxslots"));
-
     public static final Codec<Map<String, Short>> SLOTS_MAP_CODEC = Codec.unboundedMap(Codec.STRING, Codec.SHORT);
 
     public Preindexed(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
+
+        context.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
@@ -52,8 +56,6 @@ public class Preindexed {
 
         // gen data (for datapack specifically)
         modEventBus.addListener(this::onGatherData);
-
-        //codec shit 4 datapack
         modEventBus.addListener(this::registerDatapackRegistries);
     }
 

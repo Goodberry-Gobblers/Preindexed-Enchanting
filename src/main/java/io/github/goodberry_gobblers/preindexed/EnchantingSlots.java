@@ -1,20 +1,20 @@
 package io.github.goodberry_gobblers.preindexed;
 
 public class EnchantingSlots {
-    private short baseSlots;
+    private short usedSlots;
     private short cursedSlots;
 
     public EnchantingSlots(short base, short cursed) {
-        this.baseSlots = base;
+        this.usedSlots = base;
         this.cursedSlots = cursed;
     }
 
-    public short getBaseSlots() {
-        return this.baseSlots;
+    public short getUsedSlots() {
+        return this.usedSlots;
     }
 
-    public void setBaseSlots(short i) {
-        this.baseSlots = i;
+    public void setUsedSlots(short i) {
+        this.usedSlots = i;
     }
 
     public short getCursedSlots() {
@@ -33,7 +33,12 @@ public class EnchantingSlots {
         if (isCursed) {
             this.cursedSlots += i;
         } else {
-            this.baseSlots += i;
+            this.usedSlots += i;
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%d, %d)", this.usedSlots, this.cursedSlots);
     }
 }

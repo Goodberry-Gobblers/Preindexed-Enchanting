@@ -3,6 +3,7 @@ package io.github.goodberry_gobblers.preindexed.mixins;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlots;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
 import io.github.goodberry_gobblers.preindexed.Preindexed;
+import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
@@ -32,6 +33,8 @@ import java.util.Optional;
 
 @Mixin(Item.class)
 public abstract class ItemMixin implements EnchantingSlotsHelper {
+    @Shadow @Final private static Logger LOGGER;
+
     @Override
     public EnchantingSlots preindexed$getUsedEnchantingSlots(ItemStack itemStack) {
         Map<Enchantment, Integer> enchants = EnchantmentHelper.getEnchantments(itemStack);
@@ -86,16 +89,19 @@ class ItemStackMixin {
             } else {
                 Component tooltip = Component.translatable(
                         "item.preindexed.enchant_slots_tooltip",
-                        usedSlots.getBaseSlots(),
+                        usedSlots.getUsedSlots(),
                         maxSlots == Short.MAX_VALUE ? "\u221e" : maxSlots
-                ).withStyle(usedSlots.getBaseSlots() <= maxSlots + usedSlots.getCursedSlots()? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
+                ).withStyle(usedSlots.getUsedSlots() <= maxSlots + usedSlots.getCursedSlots()? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
                 if (usedSlots.hasCursedSlots()) {
-                    tooltip = tooltip.copy().append(Component.translatable(
-                            "item.preindexed.cursed_slots_tooltip",
-                            2 * usedSlots.getCursedSlots()
-                    ).withStyle(ChatFormatting.RED));
+                    int curseModifier = CommonConfig.CURSE_SLOT_VALUE.get();
+                    if (curseModifier != 0) {
+                        tooltip = tooltip.copy().append(Component.translatable(
+                                curseModifier > 0 ? "item.preindexed.cursed_slots_pos_tooltip" : "item.preindexed.cursed_slots_neg_tooltip",
+                                Math.min(Short.MAX_VALUE, CommonConfig.CURSE_SLOT_VALUE.get() * usedSlots.getCursedSlots())
+                        ).withStyle(ChatFormatting.RED));
+                    }
                 }
-                list.add(tooltip);//.append(Component.translatable("item.preindexed.cursed_slots_tooltip", 2).withStyle(ChatFormatting.RED)));
+                list.add(tooltip);
             }
         }
     }

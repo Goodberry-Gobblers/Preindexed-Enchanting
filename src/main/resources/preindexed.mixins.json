@@ -5,6 +5,8 @@
   "target": "@env(DEFAULT)",
   "refmap": "preindexed.refmap.json",
   "mixins": [
+    "AnvilMenuMixin",
+    "EnchantmentMixin",
     "ItemMixin",
     "ItemStackMixin"
   ],
