@@ -1,5 +1,6 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlots;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
 import io.github.goodberry_gobblers.preindexed.Preindexed;
@@ -7,15 +8,14 @@ import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.List;
 import java.util.Map;
@@ -37,12 +36,7 @@ public abstract class ItemMixin implements EnchantingSlotsHelper {
 
     @Override
     public EnchantingSlots preindexed$getUsedEnchantingSlots(ItemStack itemStack) {
-        Map<Enchantment, Integer> enchants = EnchantmentHelper.getEnchantments(itemStack);
-
-        EnchantingSlots total = new EnchantingSlots((short)0, (short)0);
-
-        for (var entry : enchants.entrySet()) total.add((short) entry.getValue().intValue(), entry.getKey().isCurse());
-        return total;
+        return EnchantingSlotsHelper.getUsedSlotsFromMap(EnchantmentHelper.getEnchantments(itemStack));
     }
 
     @Override
@@ -62,16 +56,11 @@ public abstract class ItemMixin implements EnchantingSlotsHelper {
 }
 
 @Mixin(ItemStack.class)
-abstract
 class ItemStackMixin {
-    @Shadow public abstract Item getItem();
-
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow public abstract boolean isCorrectToolForDrops(BlockState pState);
-
-    @Inject(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", shift = At.Shift.AFTER, ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void getTooltipLines(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<List<Component>> cir, List<Component> list) {
+    @Inject(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", shift = At.Shift.AFTER, ordinal = 0))
+    public void getTooltipLines(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<List<Component>> cir, @Local List<Component> list) {
         Optional<Short> maxSlotsOptional = EnchantingSlotsHelper.getMaxSlots((ItemStack) (Object) this, Minecraft.getInstance().level);
         if (maxSlotsOptional.isPresent() && maxSlotsOptional.get() != null) {
             short maxSlots = maxSlotsOptional.get();
@@ -79,25 +68,26 @@ class ItemStackMixin {
 
             if (maxSlots < 0) {
                 list.add(Component.translatable(
-                        "item.preindexed.enchant_limit_tooltip",
-                        Math.abs(maxSlots)
-                ).withStyle(ChatFormatting.DARK_PURPLE));
+                        "item.preindexed.enchant_limit_tooltip"
+                ).append(CommonComponents.SPACE).append(Component.translatable(
+                        "enchantment.level." + Math.abs(maxSlots)
+                )).withStyle(ChatFormatting.DARK_PURPLE));
             } else if (maxSlots == 0) {
                 list.add(Component.translatable(
                         "item.preindexed.unenchantable_tooltip"
                 ).withStyle(ChatFormatting.DARK_RED));
             } else {
+                int curseModifier = CommonConfig.CURSE_SLOT_VALUE.get() * usedSlots.getCursedSlots();
                 Component tooltip = Component.translatable(
                         "item.preindexed.enchant_slots_tooltip",
                         usedSlots.getUsedSlots(),
                         maxSlots == Short.MAX_VALUE ? "\u221e" : maxSlots
-                ).withStyle(usedSlots.getUsedSlots() <= maxSlots + usedSlots.getCursedSlots()? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
+                ).withStyle(usedSlots.getUsedSlots() <= maxSlots + curseModifier? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
                 if (usedSlots.hasCursedSlots()) {
-                    int curseModifier = CommonConfig.CURSE_SLOT_VALUE.get();
                     if (curseModifier != 0) {
                         tooltip = tooltip.copy().append(Component.translatable(
                                 curseModifier > 0 ? "item.preindexed.cursed_slots_pos_tooltip" : "item.preindexed.cursed_slots_neg_tooltip",
-                                Math.min(Short.MAX_VALUE, CommonConfig.CURSE_SLOT_VALUE.get() * usedSlots.getCursedSlots())
+                                Math.min(Short.MAX_VALUE, curseModifier)
                         ).withStyle(ChatFormatting.RED));
                     }
                 }

@@ -1,7 +1,7 @@
 {
   "item.preindexed.enchant_slots_tooltip": "%d/%d",
   "item.preindexed.unenchantable_tooltip": "Unenchantable",
-  "item.preindexed.enchant_limit_tooltip": "Max Level: %d",
+  "item.preindexed.enchant_limit_tooltip": "Max Level:",
   "item.preindexed.cursed_slots_pos_tooltip": " +%d",
   "item.preindexed.cursed_slots_neg_tooltip": " -%d"
 }

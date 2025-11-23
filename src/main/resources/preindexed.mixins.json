@@ -6,6 +6,7 @@
   "refmap": "preindexed.refmap.json",
   "mixins": [
     "AnvilMenuMixin",
+    "EnchantmentHelperMixin",
     "EnchantmentMixin",
     "ItemMixin",
     "ItemStackMixin"
