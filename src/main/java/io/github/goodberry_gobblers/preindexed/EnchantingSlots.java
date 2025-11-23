@@ -1,5 +1,6 @@
 package io.github.goodberry_gobblers.preindexed;
 
+
 public class EnchantingSlots {
     private short usedSlots;
     private short cursedSlots;

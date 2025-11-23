@@ -55,15 +55,14 @@ public abstract class EnchantmentHelperMixin {
 
             Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(pItemStack, Preindexed.serverReference.overworld());
             if (maxSlots.isPresent()) {
-                if (maxSlots.get() > 0) {
+                if (maxSlots.get() >= 0) {
                     for (int j = list3.size(); j > 0; j--) {
                         list = list3.subList(0, j);
-                        EnchantingSlots slots = EnchantingSlotsHelper.getUsedSlotsFromList(list);
-                        if (slots.getUsedSlots() <= slots.getCursedSlots() + maxSlots.get()) {
+                        if (!EnchantingSlotsHelper.isOverBudget(maxSlots.get(), EnchantingSlotsHelper.getUsedSlots(list), list)) {
                             break;
                         }
                     }
-                } else if (maxSlots.get() < 0) {
+                } else if (maxSlots.get() != Short.MIN_VALUE){
                     for (EnchantmentInstance e : list3) {
                         list.add(new EnchantmentInstance(e.enchantment, Math.min(e.level, Math.abs(maxSlots.get()))));
                     }

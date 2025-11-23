@@ -14,7 +14,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
@@ -33,11 +32,6 @@ import java.util.Optional;
 @Mixin(Item.class)
 public abstract class ItemMixin implements EnchantingSlotsHelper {
     @Shadow @Final private static Logger LOGGER;
-
-    @Override
-    public EnchantingSlots preindexed$getUsedEnchantingSlots(ItemStack itemStack) {
-        return EnchantingSlotsHelper.getUsedSlotsFromMap(EnchantmentHelper.getEnchantments(itemStack));
-    }
 
     @Override
     public Optional<Short> preindexed$getMaxEnchantingSlots(ItemStack itemStack, Level level) {
@@ -62,27 +56,28 @@ class ItemStackMixin {
     @Inject(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", shift = At.Shift.AFTER, ordinal = 0))
     public void getTooltipLines(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<List<Component>> cir, @Local List<Component> list) {
         Optional<Short> maxSlotsOptional = EnchantingSlotsHelper.getMaxSlots((ItemStack) (Object) this, Minecraft.getInstance().level);
-        if (maxSlotsOptional.isPresent() && maxSlotsOptional.get() != null) {
+        if (maxSlotsOptional.isPresent()) {
             short maxSlots = maxSlotsOptional.get();
             EnchantingSlots usedSlots = EnchantingSlotsHelper.getUsedSlots((ItemStack) (Object) this);
+            boolean isOverBudget = EnchantingSlotsHelper.isOverBudget(maxSlots, (ItemStack) (Object) this);
 
-            if (maxSlots < 0) {
+            if (maxSlots == Short.MIN_VALUE) {
+                list.add(Component.translatable(
+                        "item.preindexed.unenchantable_tooltip"
+                ).withStyle(ChatFormatting.DARK_RED));
+            } else if (maxSlots < 0) {
                 list.add(Component.translatable(
                         "item.preindexed.enchant_limit_tooltip"
                 ).append(CommonComponents.SPACE).append(Component.translatable(
                         "enchantment.level." + Math.abs(maxSlots)
-                )).withStyle(ChatFormatting.DARK_PURPLE));
-            } else if (maxSlots == 0) {
-                list.add(Component.translatable(
-                        "item.preindexed.unenchantable_tooltip"
-                ).withStyle(ChatFormatting.DARK_RED));
+                )).withStyle(isOverBudget ? ChatFormatting.DARK_RED : ChatFormatting.DARK_PURPLE));
             } else {
                 int curseModifier = CommonConfig.CURSE_SLOT_VALUE.get() * usedSlots.getCursedSlots();
                 Component tooltip = Component.translatable(
                         "item.preindexed.enchant_slots_tooltip",
                         usedSlots.getUsedSlots(),
                         maxSlots == Short.MAX_VALUE ? "\u221e" : maxSlots
-                ).withStyle(usedSlots.getUsedSlots() <= maxSlots + curseModifier? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
+                ).withStyle(isOverBudget ? ChatFormatting.DARK_RED : ChatFormatting.BLUE);
                 if (usedSlots.hasCursedSlots()) {
                     if (curseModifier != 0) {
                         tooltip = tooltip.copy().append(CommonComponents.SPACE).append(Component.translatable(
