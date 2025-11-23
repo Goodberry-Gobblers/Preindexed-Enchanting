@@ -38,7 +38,7 @@ Curses do not effect an item's max limit.
 ### Edge Cases
 <details open>
   
-There are special edge cases for when an item is set to have either 0 or 32,767 enchantment slots. Respectively, these create unenchantable and infintiely enchantable items.
+There are special edge cases for when an item is set to have either -32,768 or 32,767 enchantment slots. Respectively, these create unenchantable and infintiely enchantable items.
 
 | Unenchantable | Infinitely Enchantable |
 | --- | --- |
