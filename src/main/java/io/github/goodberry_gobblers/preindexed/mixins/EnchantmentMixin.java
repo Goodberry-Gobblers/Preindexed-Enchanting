@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Enchantment.class)
 public class EnchantmentMixin {
     @Inject(method = "isCompatibleWith", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/Enchantment;checkCompatibility(Lnet/minecraft/world/item/enchantment/Enchantment;)Z"), cancellable = true)
-    private void injectAlwaysTrue(CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(true);
+    private void injectRemoveCompatCheck(Enchantment pOther, CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue((Object) this != pOther);
     }
 }

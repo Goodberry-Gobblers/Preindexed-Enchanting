@@ -29,32 +29,24 @@ import static net.minecraft.world.item.enchantment.EnchantmentHelper.getAvailabl
 public abstract class EnchantmentHelperMixin {
     @Inject(method = "selectEnchantment", at = @At(value = "HEAD"), cancellable = true)
     private static void selectEnchantment(RandomSource pRandom, ItemStack pItemStack, int pLevel, boolean pAllowTreasure, CallbackInfoReturnable<List<EnchantmentInstance>> cir) {
-        List<EnchantmentInstance> list = Lists.newArrayList();
-        Item item = pItemStack.getItem();
-        int i = item.getEnchantmentValue();
-        if (i <= 0) {
-            cir.setReturnValue(list);
-        }
-        pLevel += 1 + pRandom.nextInt(i / 4 + 1) + pRandom.nextInt(i / 4 + 1);
-        float f = (pRandom.nextFloat() + pRandom.nextFloat() - 1.0F) * 0.15F;
-        pLevel = Mth.clamp(Math.round((float)pLevel + (float)pLevel * f), 1, Integer.MAX_VALUE);
-        List<EnchantmentInstance> list1 = getAvailableEnchantmentResults(pLevel, pItemStack, pAllowTreasure);
-
-        if (!list1.isEmpty()) {
-            int length = (int) Math.max(1, (pRandom.nextGaussian() + 3 * (float)pLevel/50) * 2);
-
-            //create shuffled list of enchantments
-            List<EnchantmentInstance> list2 = Lists.newArrayList();
-            while (!list1.isEmpty()) {
-                WeightedRandom.getRandomItem(pRandom, list1).ifPresent((EnchantmentInstance e) -> {
-                    list2.add(e);
-                    list1.remove(e);
-                });
+        Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(pItemStack, Preindexed.serverReference.overworld());
+        if (maxSlots.isPresent()) {
+            List<EnchantmentInstance> list = Lists.newArrayList();Item item = pItemStack.getItem();int i = item.getEnchantmentValue();if (i <= 0) {
+                cir.setReturnValue(list);
             }
-            List<EnchantmentInstance> list3 = list2.subList(0, Math.min(length, list2.size()));
-
-            Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(pItemStack, Preindexed.serverReference.overworld());
-            if (maxSlots.isPresent()) {
+            pLevel += 1 + pRandom.nextInt(i / 4 + 1) + pRandom.nextInt(i / 4 + 1);float f = (pRandom.nextFloat() + pRandom.nextFloat() - 1.0F) * 0.15F;
+            pLevel = Mth.clamp(Math.round((float) pLevel + (float) pLevel * f), 1, Integer.MAX_VALUE);
+            List<EnchantmentInstance> list1 = getAvailableEnchantmentResults(pLevel, pItemStack, pAllowTreasure);
+            int length = (int) Math.max(1, (pRandom.nextGaussian() + 3 * (float) pLevel / 50) * 2);
+            //create shuffled list of enchantments
+                List<EnchantmentInstance> list2 = Lists.newArrayList();
+                while (!list1.isEmpty()) {
+                    WeightedRandom.getRandomItem(pRandom, list1).ifPresent((EnchantmentInstance e) -> {
+                        list2.add(e);
+                        list1.remove(e);
+                    });
+                }
+                List<EnchantmentInstance> list3 = list2.subList(0, Math.min(length, list2.size()));
                 if (maxSlots.get() >= 0) {
                     for (int j = list3.size(); j > 0; j--) {
                         list = list3.subList(0, j);
@@ -62,17 +54,13 @@ public abstract class EnchantmentHelperMixin {
                             break;
                         }
                     }
-                } else if (maxSlots.get() != Short.MIN_VALUE){
+                } else if (maxSlots.get() != Short.MIN_VALUE) {
                     for (EnchantmentInstance e : list3) {
                         list.add(new EnchantmentInstance(e.enchantment, Math.min(e.level, Math.abs(maxSlots.get()))));
                     }
                 }
+                cir.setReturnValue(list);
             }
-            if (item.equals(Items.BOOK)) {
-                list = list3;
-            }
-        }
-        cir.setReturnValue(list);
     }
 
     @Redirect(method = "getAvailableEnchantmentResults", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/Enchantment;getMaxCost(I)I"))

@@ -15,7 +15,7 @@
   "minecraft:diamond_leggings": 8,
   "minecraft:diamond_pickaxe": 9,
   "minecraft:diamond_shovel": 9,
-  "minecraft:diamond_sword": -3,
+  "minecraft:diamond_sword": -32767,
   "minecraft:elytra": 4,
   "minecraft:fishing_rod": 8,
   "minecraft:flint_and_steel": 3,

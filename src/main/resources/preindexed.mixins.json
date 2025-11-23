@@ -8,7 +8,6 @@
     "AnvilMenuMixin",
     "EnchantmentHelperMixin",
     "EnchantmentMixin",
-    "ItemMixin",
     "ItemStackMixin"
   ],
   "injectors": {

@@ -1,13 +1,18 @@
 package io.github.goodberry_gobblers.preindexed;
 
 import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Registry;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -34,11 +39,17 @@ public interface EnchantingSlotsHelper {
     }
 
     static Optional<Short> getMaxSlots(ItemStack itemStack, Level level) {
-        if (itemStack != null) {
-            return ((EnchantingSlotsHelper) itemStack.getItem()).preindexed$getMaxEnchantingSlots(itemStack, level);
+        Optional<Registry<Map<String, Short>>> slotsRegistry;
+        if (level.isClientSide) {
+            slotsRegistry = Objects.requireNonNull(Minecraft.getInstance().getConnection()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
         } else {
-            return Optional.empty();
+            slotsRegistry = Objects.requireNonNull(level.getServer()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
         }
+
+        if (slotsRegistry.isPresent()) {
+            return Optional.ofNullable(slotsRegistry.get().get(Preindexed.SLOTS_KEY).get(ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString()));
+        }
+        return Optional.empty();
     }
 
     static boolean isOverBudget(ItemStack itemStack, Level level) {
@@ -70,7 +81,4 @@ public interface EnchantingSlotsHelper {
             return enchantingSlots.getUsedSlots() > maxSlots + CommonConfig.CURSE_SLOT_VALUE.get() * enchantingSlots.getCursedSlots();
         }
     }
-
-    Optional<Short> preindexed$getMaxEnchantingSlots(ItemStack itemStack, Level level);
-
 }

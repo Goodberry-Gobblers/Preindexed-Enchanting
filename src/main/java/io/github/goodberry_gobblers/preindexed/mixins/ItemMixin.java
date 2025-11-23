@@ -3,19 +3,14 @@ package io.github.goodberry_gobblers.preindexed.mixins;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlots;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
-import io.github.goodberry_gobblers.preindexed.Preindexed;
 import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Registry;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,29 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-
-@Mixin(Item.class)
-public abstract class ItemMixin implements EnchantingSlotsHelper {
-    @Shadow @Final private static Logger LOGGER;
-
-    @Override
-    public Optional<Short> preindexed$getMaxEnchantingSlots(ItemStack itemStack, Level level) {
-        Optional<Registry<Map<String, Short>>> slotsRegistry;
-        if (level.isClientSide) {
-            slotsRegistry = Objects.requireNonNull(Minecraft.getInstance().getConnection()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
-        } else {
-            slotsRegistry = Objects.requireNonNull(level.getServer()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
-        }
-
-        if (slotsRegistry.isPresent()) {
-            return Optional.ofNullable(slotsRegistry.get().get(Preindexed.SLOTS_KEY).get(ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString()));
-        }
-        return Optional.empty();
-    }
-}
 
 @Mixin(ItemStack.class)
 class ItemStackMixin {
