@@ -85,7 +85,7 @@ class ItemStackMixin {
                 ).withStyle(usedSlots.getUsedSlots() <= maxSlots + curseModifier? ChatFormatting.BLUE : ChatFormatting.DARK_RED);
                 if (usedSlots.hasCursedSlots()) {
                     if (curseModifier != 0) {
-                        tooltip = tooltip.copy().append(Component.translatable(
+                        tooltip = tooltip.copy().append(CommonComponents.SPACE).append(Component.translatable(
                                 curseModifier > 0 ? "item.preindexed.cursed_slots_pos_tooltip" : "item.preindexed.cursed_slots_neg_tooltip",
                                 Math.min(Short.MAX_VALUE, curseModifier)
                         ).withStyle(ChatFormatting.RED));
