@@ -3,10 +3,10 @@ Preindexed Enchanting is a mod made for the [REDACTED] modpack, and as such has 
 
 - [Features](#features)
   - [Enchantment Slots](#enchantment-slots)
-  - [Level Limits](level-limits)
-  - [Edge Cases](edge-cases)
-- [Vanilla Changes](vanilla-changes)
-  - [Enchantment Incompatibility](enchantment-incompatibility)
+  - [Level Limits](#level-limits)
+  - [Edge Cases](#edge-cases)
+- [Vanilla Changes](#vanilla-changes)
+  - [Enchantment Incompatibility](#enchantment-incompatibility)
 
 ## Features
 
