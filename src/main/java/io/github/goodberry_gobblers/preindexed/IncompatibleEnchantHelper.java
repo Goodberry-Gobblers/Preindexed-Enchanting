@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.world.inventory.GrindstoneMenu;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -19,7 +18,7 @@ import java.util.*;
 public interface IncompatibleEnchantHelper {
 
     //reinstates all stored enchantments
-    static void flatten(ItemStack itemStack) {
+    static ItemStack flatten(ItemStack itemStack) {
         if (itemStack.getItem() != Items.ENCHANTED_BOOK) {
             ListTag fakeEnchants = EnchantedBookItem.getEnchantments(itemStack);
             for (int i = 0; i < fakeEnchants.size(); i++) {
@@ -29,6 +28,7 @@ public interface IncompatibleEnchantHelper {
             }
             itemStack.removeTagKey("StoredEnchantments");
         }
+        return itemStack;
     }
 
     //tries to swap enchants. returns if it was successful

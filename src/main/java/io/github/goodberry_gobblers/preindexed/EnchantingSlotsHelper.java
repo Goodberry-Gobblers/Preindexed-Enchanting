@@ -4,7 +4,6 @@ import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.Level;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 public interface EnchantingSlotsHelper {
     static EnchantingSlots getUsedSlots(ItemStack itemStack) {
         if (itemStack != null) {
-            return getUsedSlots(itemStack.getAllEnchantments());
+            return getUsedSlots(IncompatibleEnchantHelper.flatten(itemStack.copy()).getAllEnchantments());
         } else {
             return new EnchantingSlots((short) 0, (short) 0 );
         }
