@@ -1,7 +1,6 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
 import com.google.common.collect.Lists;
-import io.github.goodberry_gobblers.preindexed.EnchantingSlots;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
 import io.github.goodberry_gobblers.preindexed.Preindexed;
 import net.minecraft.util.Mth;
@@ -9,7 +8,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.WeightedRandom;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;

@@ -25,6 +25,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DataPackRegistryEvent;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,10 +41,15 @@ public class Preindexed {
     //this feels so jank, but I couldn't figure out how to get registryAccess from the enchantmentHelperMixin
     public static MinecraftServer serverReference;
 
-    // Datapack datagen constants
+    //Datapack datagen constants
+    // max slots
     public static final ResourceKey<Registry<Map<String, Short>>> SLOTS_REGISTRY_KEY = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(MOD_ID, "maxslots"));
     public static final ResourceKey<Map<String, Short>> SLOTS_KEY = ResourceKey.create(SLOTS_REGISTRY_KEY, ResourceLocation.fromNamespaceAndPath(MOD_ID, "maxslots"));
     public static final Codec<Map<String, Short>> SLOTS_MAP_CODEC = Codec.unboundedMap(Codec.STRING, Codec.SHORT);
+    // incompatible enchantments
+    public static final ResourceKey<Registry<List<List<String>>>> INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(MOD_ID, "incompatible"));
+    public static final ResourceKey<List<List<String>>> INCOMPATIBLE_ENCHANTMENTS_KEY = ResourceKey.create(INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY, ResourceLocation.fromNamespaceAndPath(MOD_ID, "incompatible"));
+    public static final Codec<List<List<String>>> INCOMPATIBLE_ENCHANTMENTS_CODEC = Codec.list(Codec.list( Codec.STRING));
 
     public Preindexed(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
@@ -74,6 +81,11 @@ public class Preindexed {
                 SLOTS_REGISTRY_KEY,
                 SLOTS_MAP_CODEC,
                 SLOTS_MAP_CODEC
+        );
+        event.dataPackRegistry(
+                INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY,
+                INCOMPATIBLE_ENCHANTMENTS_CODEC,
+                INCOMPATIBLE_ENCHANTMENTS_CODEC
         );
     }
 
@@ -165,6 +177,15 @@ public class Preindexed {
                                     bootstrap.register(
                                             SLOTS_KEY,
                                             map
+                                    );
+                                }).add(INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY, bootstrap -> {
+                                    List<List<String>> list = new ArrayList<>();
+
+                                    list.add(List.of("minecraft:silk_touch", "minecraft:fortune"));
+
+                                    bootstrap.register(
+                                            INCOMPATIBLE_ENCHANTMENTS_KEY,
+                                            list
                                     );
                                 }),
                         Set.of(MOD_ID)

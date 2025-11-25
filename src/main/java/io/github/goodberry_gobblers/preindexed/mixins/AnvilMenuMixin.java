@@ -1,9 +1,7 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import io.github.goodberry_gobblers.preindexed.EnchantingSlots;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
-import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;

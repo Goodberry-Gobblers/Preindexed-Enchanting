@@ -9,6 +9,7 @@
     "EnchantmentHelperMixin",
     "EnchantmentMenuMixin",
     "EnchantmentMixin",
+    "ItemMixin",
     "ItemStackMixin"
   ],
   "injectors": {
