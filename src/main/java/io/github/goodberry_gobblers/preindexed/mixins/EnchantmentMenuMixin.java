@@ -13,7 +13,7 @@ import java.util.Optional;
 @Mixin(EnchantmentMenu.class)
 public class EnchantmentMenuMixin {
     @Redirect(method = "slotsChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEnchantable()Z"))
-    private boolean isEncahntable(ItemStack instance) {
+    private boolean isEnchantable(ItemStack instance) {
         Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(instance, Preindexed.serverReference.overworld());
         if (maxSlots.isPresent()) {
             return instance.isEnchantable() && maxSlots.get() != Short.MIN_VALUE;
