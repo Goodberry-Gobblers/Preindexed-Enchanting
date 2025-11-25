@@ -182,6 +182,7 @@ public class Preindexed {
                                     List<List<String>> list = new ArrayList<>();
 
                                     list.add(List.of("minecraft:silk_touch", "minecraft:fortune"));
+                                    list.add(List.of("minecraft:riptide", "minecraft:loyalty"));
 
                                     bootstrap.register(
                                             INCOMPATIBLE_ENCHANTMENTS_KEY,
