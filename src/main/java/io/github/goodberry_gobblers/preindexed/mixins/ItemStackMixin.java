@@ -11,12 +11,11 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.EnchantedBookItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -25,8 +24,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Mixin(ItemStack.class)
-abstract
-class ItemStackMixin {
+abstract class ItemStackMixin {
+    @Shadow public abstract Item getItem();
+
     @Inject(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", shift = At.Shift.AFTER, ordinal = 0))
     private void addSlotsTooltip(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<List<Component>> cir, @Local List<Component> list) {
         Optional<Short> maxSlotsOptional = EnchantingSlotsHelper.getMaxSlots((ItemStack) (Object) this, Minecraft.getInstance().level);
@@ -70,10 +70,16 @@ class ItemStackMixin {
 
     @Inject(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;appendEnchantmentNames(Ljava/util/List;Lnet/minecraft/nbt/ListTag;)V", shift = At.Shift.AFTER))
     private void addDisabledEnchantmentsTooltip(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<List<Component>> cir, @Local List<Component> list) {
-        ListTag fakeEnchants = EnchantedBookItem.getEnchantments((ItemStack) (Object) this);
-        for(int i = 0; i < fakeEnchants.size(); ++i) {
-            CompoundTag compoundtag = fakeEnchants.getCompound(i);
-            list.add(ForgeRegistries.ENCHANTMENTS.getValue(EnchantmentHelper.getEnchantmentId(compoundtag)).getFullname(EnchantmentHelper.getEnchantmentLevel(compoundtag)).copy().withStyle(ChatFormatting.ITALIC));
+        if (this.getItem() != Items.ENCHANTED_BOOK) {
+            ListTag fakeEnchants = EnchantedBookItem.getEnchantments((ItemStack) (Object) this);
+            for (int i = 0; i < fakeEnchants.size(); ++i) {
+                CompoundTag compoundtag = fakeEnchants.getCompound(i);
+                list.add(ForgeRegistries.ENCHANTMENTS.getValue(EnchantmentHelper.getEnchantmentId(compoundtag))
+                                .getFullname(EnchantmentHelper.getEnchantmentLevel(compoundtag)).copy()
+                                .withStyle(ChatFormatting.STRIKETHROUGH)
+                                //.withStyle(ChatFormatting.ITALICS)
+                );
+            }
         }
     }
 }

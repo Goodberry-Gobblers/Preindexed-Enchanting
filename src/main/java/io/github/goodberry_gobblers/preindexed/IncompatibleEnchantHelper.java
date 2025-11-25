@@ -4,8 +4,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.world.inventory.GrindstoneMenu;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
@@ -16,10 +18,23 @@ import java.util.*;
 
 public interface IncompatibleEnchantHelper {
 
+    //reinstates all stored enchantments
+    static void flatten(ItemStack itemStack) {
+        if (itemStack.getItem() != Items.ENCHANTED_BOOK) {
+            ListTag fakeEnchants = EnchantedBookItem.getEnchantments(itemStack);
+            for (int i = 0; i < fakeEnchants.size(); i++) {
+                CompoundTag compoundTag = fakeEnchants.getCompound(i);
+                Optional<Enchantment> enchant = Optional.ofNullable(ForgeRegistries.ENCHANTMENTS.getValue(EnchantmentHelper.getEnchantmentId(compoundTag)));
+                enchant.ifPresent(enchantment -> itemStack.enchant(enchantment, EnchantmentHelper.getEnchantmentLevel(compoundTag)));
+            }
+            itemStack.removeTagKey("StoredEnchantments");
+        }
+    }
+
     //tries to swap enchants. returns if it was successful
     static boolean swap(ItemStack itemStack, Level level) {
         Optional<List<List<String>>> conflictListList = getIncompatibilityMap(level);
-        if (conflictListList.isPresent()) {
+        if (conflictListList.isPresent() && itemStack.getItem() != Items.ENCHANTED_BOOK) {
             ListTag fakeEnchants = EnchantedBookItem.getEnchantments(itemStack);
             if (!fakeEnchants.isEmpty()) {
                 Map<Enchantment, Integer> enchantMap = itemStack.getAllEnchantments();
@@ -55,13 +70,15 @@ public interface IncompatibleEnchantHelper {
     //moves all but the first conflicting enchant to StoredEnchantments for every set of mutex enchants
     static void resolveConflicts(ItemStack itemStack, Level level) {
         List<List<Enchantment>> conflictListList = getConflicts(itemStack, level);
-        for (List<Enchantment> list : conflictListList) {
-            for (Enchantment enchant : list.subList(1, list.size())) {
-                Map<Enchantment, Integer> enchantMap = itemStack.getAllEnchantments();
-                for (int i = 0; i < enchantMap.size(); ++i ) {
-                    if (new ArrayList<>(enchantMap.keySet()).get(i) == enchant) {
-                        itemStack.getEnchantmentTags().remove(i);
-                        EnchantedBookItem.addEnchantment(itemStack, new EnchantmentInstance(enchant, enchantMap.get(enchant)));
+        if (!conflictListList.isEmpty()) {
+            for (List<Enchantment> list : conflictListList) {
+                for (Enchantment enchant : list.subList(1, list.size())) {
+                    Map<Enchantment, Integer> enchantMap = itemStack.getAllEnchantments();
+                    for (int i = 0; i < enchantMap.size(); ++i) {
+                        if (new ArrayList<>(enchantMap.keySet()).get(i) == enchant) {
+                            itemStack.getEnchantmentTags().remove(i);
+                            EnchantedBookItem.addEnchantment(itemStack, new EnchantmentInstance(enchant, enchantMap.get(enchant)));
+                        }
                     }
                 }
             }

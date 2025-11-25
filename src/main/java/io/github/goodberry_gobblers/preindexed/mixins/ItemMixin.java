@@ -26,9 +26,7 @@ public class ItemMixin {
         // right click specifically
         if (pAction == ClickAction.SECONDARY && pStack.isEnchanted()) {
             LogUtils.getLogger().info(pOther.toString());
-            if (!IncompatibleEnchantHelper.getConflicts(pStack, pPlayer.level()).isEmpty()) {
-                IncompatibleEnchantHelper.resolveConflicts(pStack, pPlayer.level());
-            }
+            IncompatibleEnchantHelper.resolveConflicts(pStack, pPlayer.level());
             if (IncompatibleEnchantHelper.swap(pStack, pPlayer.level())) {
                 if (pPlayer.level().isClientSide) {
                     pPlayer.playSound(SoundEvents.AMETHYST_BLOCK_RESONATE);

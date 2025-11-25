@@ -1,17 +1,22 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.logging.LogUtils;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
+import io.github.goodberry_gobblers.preindexed.IncompatibleEnchantHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
@@ -29,11 +34,24 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu {
         Level level = this.player.level();
         Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(itemStack1, level);
         if (maxSlots.isPresent()) {
-            if (maxSlots.get() == 0 || EnchantingSlotsHelper.isOverBudget(itemStack1, level)) {
+            if (maxSlots.get() == Short.MIN_VALUE || EnchantingSlotsHelper.isOverBudget(itemStack1, level)) {
                 this.resultSlots.setItem(0, ItemStack.EMPTY);
                 this.cost.set(0);
                 ci.cancel();
             }
         }
+
+        IncompatibleEnchantHelper.resolveConflicts(itemStack1, this.player.level());
     }
+
+    @Unique
+    private static ItemStack preindexed$flatten(ItemStack itemStack) {
+        if (itemStack.getItem() != Items.ENCHANTED_BOOK) IncompatibleEnchantHelper.flatten(itemStack);
+        return itemStack;
+    }
+
+    @ModifyVariable(method = "createResult", at = @At("STORE"), ordinal = 1)
+    private ItemStack flatten1(ItemStack value) {return preindexed$flatten(value);};
+    @ModifyVariable(method = "createResult", at = @At("STORE"), ordinal = 2)
+    private ItemStack flatten2(ItemStack value) {return preindexed$flatten(value);};
 }

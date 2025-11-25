@@ -2,6 +2,7 @@ package io.github.goodberry_gobblers.preindexed.mixins;
 
 import com.google.common.collect.Lists;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
+import io.github.goodberry_gobblers.preindexed.IncompatibleEnchantHelper;
 import io.github.goodberry_gobblers.preindexed.Preindexed;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -24,12 +25,15 @@ import static net.minecraft.world.item.enchantment.EnchantmentHelper.getAvailabl
 
 //legend has it I knew what this all meant when I wrote it
 @Mixin(EnchantmentHelper.class)
-public abstract class EnchantmentHelperMixin {
+public class EnchantmentHelperMixin {
     @Inject(method = "selectEnchantment", at = @At(value = "HEAD"), cancellable = true)
     private static void selectEnchantment(RandomSource pRandom, ItemStack pItemStack, int pLevel, boolean pAllowTreasure, CallbackInfoReturnable<List<EnchantmentInstance>> cir) {
         Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(pItemStack, Preindexed.serverReference.overworld());
         if (maxSlots.isPresent()) {
-            List<EnchantmentInstance> list = Lists.newArrayList();Item item = pItemStack.getItem();int i = item.getEnchantmentValue();if (i <= 0) {
+            List<EnchantmentInstance> list = Lists.newArrayList();
+            Item item = pItemStack.getItem();
+            int i = item.getEnchantmentValue();
+            if (i <= 0) {
                 cir.setReturnValue(list);
             }
             pLevel += 1 + pRandom.nextInt(i / 4 + 1) + pRandom.nextInt(i / 4 + 1);float f = (pRandom.nextFloat() + pRandom.nextFloat() - 1.0F) * 0.15F;
@@ -37,28 +41,33 @@ public abstract class EnchantmentHelperMixin {
             List<EnchantmentInstance> list1 = getAvailableEnchantmentResults(pLevel, pItemStack, pAllowTreasure);
             int length = (int) Math.max(1, (pRandom.nextGaussian() + 3 * (float) pLevel / 50) * 2);
             //create shuffled list of enchantments
-                List<EnchantmentInstance> list2 = Lists.newArrayList();
-                while (!list1.isEmpty()) {
-                    WeightedRandom.getRandomItem(pRandom, list1).ifPresent((EnchantmentInstance e) -> {
-                        list2.add(e);
-                        list1.remove(e);
-                    });
-                }
-                List<EnchantmentInstance> list3 = list2.subList(0, Math.min(length, list2.size()));
-                if (maxSlots.get() >= 0) {
-                    for (int j = list3.size(); j > 0; j--) {
-                        list = list3.subList(0, j);
-                        if (!EnchantingSlotsHelper.isOverBudget(maxSlots.get(), EnchantingSlotsHelper.getUsedSlots(list), list)) {
-                            break;
-                        }
-                    }
-                } else if (maxSlots.get() != Short.MIN_VALUE) {
-                    for (EnchantmentInstance e : list3) {
-                        list.add(new EnchantmentInstance(e.enchantment, Math.min(e.level, Math.abs(maxSlots.get()))));
-                    }
-                }
-                cir.setReturnValue(list);
+            List<EnchantmentInstance> list2 = Lists.newArrayList();
+            while (!list1.isEmpty()) {
+                WeightedRandom.getRandomItem(pRandom, list1).ifPresent((EnchantmentInstance e) -> {
+                    list2.add(e);
+                    list1.remove(e);
+                });
             }
+            List<EnchantmentInstance> list3 = list2.subList(0, Math.min(length, list2.size()));
+            if (maxSlots.get() >= 0) {
+                for (int j = list3.size(); j > 0; j--) {
+                    list = list3.subList(0, j);
+                    if (!EnchantingSlotsHelper.isOverBudget(maxSlots.get(), EnchantingSlotsHelper.getUsedSlots(list), list)) {
+                        break;
+                    }
+                }
+            } else if (maxSlots.get() != Short.MIN_VALUE) {
+                for (EnchantmentInstance e : list3) {
+                    list.add(new EnchantmentInstance(e.enchantment, Math.min(e.level, Math.abs(maxSlots.get()))));
+                }
+            }
+            cir.setReturnValue(list);
+        }
+    }
+
+    @Inject(method = "enchantItem", at = @At("RETURN"))
+    private static void fixIncompatibilities(RandomSource pRandom, ItemStack pStack, int pLevel, boolean pAllowTreasure, CallbackInfoReturnable<ItemStack> cir) {
+        IncompatibleEnchantHelper.resolveConflicts(pStack, Preindexed.serverReference.overworld());
     }
 
     @Redirect(method = "getAvailableEnchantmentResults", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/Enchantment;getMaxCost(I)I"))

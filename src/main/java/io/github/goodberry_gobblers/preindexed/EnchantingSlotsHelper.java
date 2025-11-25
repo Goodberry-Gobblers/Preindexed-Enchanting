@@ -4,6 +4,7 @@ import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.Level;
@@ -68,7 +69,6 @@ public interface EnchantingSlotsHelper {
 
     static boolean isOverBudget(short maxSlots, EnchantingSlots enchantingSlots, List<EnchantmentInstance> enchantList) {
         return isOverBudget(maxSlots, enchantingSlots, enchantList.stream().collect(Collectors.toMap((EnchantmentInstance e) -> e.enchantment, (EnchantmentInstance e) -> e.level)));
-
     }
 
     static boolean isOverBudget(short maxSlots, EnchantingSlots enchantingSlots, Map<Enchantment, Integer> enchantMap) {
