@@ -22,6 +22,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.javafmlmod.FMLModContainer;
 import net.minecraftforge.registries.DataPackRegistryEvent;
 import org.slf4j.Logger;
 
@@ -43,31 +44,37 @@ public class Preindexed {
 
     //Datapack datagen constants
     // max slots
-    public static final ResourceKey<Registry<Map<String, Short>>> SLOTS_REGISTRY_KEY = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(MOD_ID, "maxslots"));
-    public static final ResourceKey<Map<String, Short>> SLOTS_KEY = ResourceKey.create(SLOTS_REGISTRY_KEY, ResourceLocation.fromNamespaceAndPath(MOD_ID, "maxslots"));
+    public static final ResourceKey<Registry<Map<String, Short>>> SLOTS_REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(MOD_ID, "maxslots"));
+    public static final ResourceKey<Map<String, Short>> SLOTS_KEY = ResourceKey.create(SLOTS_REGISTRY_KEY, new ResourceLocation(MOD_ID, "maxslots"));
     public static final Codec<Map<String, Short>> SLOTS_MAP_CODEC = Codec.unboundedMap(Codec.STRING, Codec.SHORT);
     // incompatible enchantments
-    public static final ResourceKey<Registry<List<List<String>>>> INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(MOD_ID, "incompatible"));
-    public static final ResourceKey<List<List<String>>> INCOMPATIBLE_ENCHANTMENTS_KEY = ResourceKey.create(INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY, ResourceLocation.fromNamespaceAndPath(MOD_ID, "incompatible"));
+    public static final ResourceKey<Registry<List<List<String>>>> INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY = ResourceKey.createRegistryKey(new ResourceLocation(MOD_ID, "incompatible"));
+    public static final ResourceKey<List<List<String>>> INCOMPATIBLE_ENCHANTMENTS_KEY = ResourceKey.create(INCOMPATIBLE_ENCHANTMENTS_REGISTRY_KEY, new ResourceLocation(MOD_ID, "incompatible"));
     public static final Codec<List<List<String>>> INCOMPATIBLE_ENCHANTMENTS_CODEC = Codec.list(Codec.list( Codec.STRING));
 
-    public Preindexed(FMLJavaModLoadingContext context) {
-        IEventBus modEventBus = context.getModEventBus();
 
-        context.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
+
+    //Forge uses this entrypoint
+    public Preindexed(FMLJavaModLoadingContext context) {
+        new Preindexed(context.getModEventBus(), context.getContainer());
+    }
+
+    //but neoforge uses this entrypoint. WHy is it like this??
+    public Preindexed(IEventBus bus, FMLModContainer container) {
+        container.addConfig(new ModConfig(ModConfig.Type.COMMON, CommonConfig.SPEC, container));
 
         // Register the commonSetup method for modloading
-        modEventBus.addListener(this::commonSetup);
+        bus.addListener(this::commonSetup);
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
 
         // Register the item to a creative tab
-        modEventBus.addListener(this::addCreative);
+        bus.addListener(this::addCreative);
 
         // gen data (for datapack specifically)
-        modEventBus.addListener(this::onGatherData);
-        modEventBus.addListener(this::registerDatapackRegistries);
+        bus.addListener(this::onGatherData);
+        bus.addListener(this::registerDatapackRegistries);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

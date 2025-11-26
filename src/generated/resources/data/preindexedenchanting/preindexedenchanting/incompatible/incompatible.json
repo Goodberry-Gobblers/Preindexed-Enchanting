@@ -4,9 +4,7 @@
     "minecraft:fortune"
   ],
   [
-    "minecraft:protection",
-    "minecraft:fire_protection",
-    "minecraft:projectile_protection",
-    "minecraft:blast_protection"
+    "minecraft:riptide",
+    "minecraft:loyalty"
   ]
 ]

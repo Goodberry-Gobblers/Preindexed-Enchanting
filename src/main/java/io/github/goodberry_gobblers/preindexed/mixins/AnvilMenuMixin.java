@@ -1,7 +1,6 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.logging.LogUtils;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
 import io.github.goodberry_gobblers.preindexed.IncompatibleEnchantHelper;
 import net.minecraft.world.entity.player.Inventory;
@@ -18,7 +17,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Mixin(AnvilMenu.class)
@@ -29,19 +30,19 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu {
         super(pType, pContainerId, pPlayerInventory, pAccess);
     }
 
-    @Inject(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;setEnchantments(Ljava/util/Map;Lnet/minecraft/world/item/ItemStack;)V", shift = At.Shift.AFTER), cancellable = true)
-    private void stopOverenchanting(CallbackInfo ci, @Local(ordinal = 1) ItemStack itemStack1) {
+    @Inject(method = "createResult", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;setEnchantments(Ljava/util/Map;Lnet/minecraft/world/item/ItemStack;)V", shift = At.Shift.AFTER), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+    private void stopOverenchanting(CallbackInfo ci, ItemStack itemstack, int i, int j, int k, ItemStack itemstack1, ItemStack itemstack2, Map map, boolean flag, int k2) {
         Level level = this.player.level();
-        Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(itemStack1, level);
+        Optional<Short> maxSlots = EnchantingSlotsHelper.getMaxSlots(itemstack1, level);
         if (maxSlots.isPresent()) {
-            if (maxSlots.get() == Short.MIN_VALUE || EnchantingSlotsHelper.isOverBudget(itemStack1, level)) {
+            if (maxSlots.get() == Short.MIN_VALUE || EnchantingSlotsHelper.isOverBudget(itemstack1, level)) {
                 this.resultSlots.setItem(0, ItemStack.EMPTY);
                 this.cost.set(0);
                 ci.cancel();
             }
         }
 
-        IncompatibleEnchantHelper.resolveConflicts(itemStack1, this.player.level());
+        IncompatibleEnchantHelper.resolveConflicts(itemstack1, this.player.level());
     }
 
     @Unique
