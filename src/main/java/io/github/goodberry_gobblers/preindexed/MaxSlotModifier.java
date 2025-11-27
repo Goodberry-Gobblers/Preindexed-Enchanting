@@ -1,6 +1,5 @@
 package io.github.goodberry_gobblers.preindexed;
 
-import com.mojang.logging.LogUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 

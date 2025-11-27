@@ -1,6 +1,5 @@
 package io.github.goodberry_gobblers.preindexed.mixins;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import io.github.goodberry_gobblers.preindexed.EnchantingSlotsHelper;
 import io.github.goodberry_gobblers.preindexed.IncompatibleEnchantHelper;
 import net.minecraft.world.entity.player.Inventory;

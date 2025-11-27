@@ -1,12 +1,9 @@
 package io.github.goodberry_gobblers.preindexed;
 
-import com.mojang.logging.LogUtils;
 import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.TagTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
