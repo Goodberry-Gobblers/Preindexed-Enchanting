@@ -1,18 +1,19 @@
 package io.github.goodberry_gobblers.preindexed;
 
+import com.mojang.logging.LogUtils;
 import io.github.goodberry_gobblers.preindexed.config.CommonConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.TagTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public interface EnchantingSlotsHelper {
@@ -38,6 +39,17 @@ public interface EnchantingSlotsHelper {
     }
 
     static Optional<Short> getMaxSlots(ItemStack itemStack, Level level) {
+        CompoundTag itemTag = itemStack.getTag();
+        List<MaxSlotModifier> modifierList = new ArrayList<>();
+        if (itemTag != null) {
+            modifierList = MaxSlotModifier.fromTags(itemTag.getList("maxSlotModifiers", 10));
+
+            if (itemTag.contains("maxSlotOverride")) {
+                return Optional.of(MaxSlotModifier.applyModifiers(itemTag.getShort("maxSlotOverride"), modifierList));
+            }
+        }
+
+
         Optional<Registry<Map<String, Short>>> slotsRegistry;
         if (level.isClientSide) {
             slotsRegistry = Objects.requireNonNull(Minecraft.getInstance().getConnection()).registryAccess().registry(Preindexed.SLOTS_REGISTRY_KEY);
@@ -46,7 +58,10 @@ public interface EnchantingSlotsHelper {
         }
 
         if (slotsRegistry.isPresent()) {
-            return Optional.ofNullable(slotsRegistry.get().get(Preindexed.SLOTS_KEY).get(ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString()));
+            Optional<Short> out = Optional.ofNullable(slotsRegistry.get().get(Preindexed.SLOTS_KEY).get(ForgeRegistries.ITEMS.getKey(itemStack.getItem()).toString()));
+            if (out.isPresent()) {
+                return Optional.of(MaxSlotModifier.applyModifiers(out.get(), modifierList));
+            }
         }
         return Optional.empty();
     }
